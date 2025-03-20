@@ -1,0 +1,18 @@
+[workspace]
+members = [
+    "percentiletracker",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Patrick Jackson <patrick@jackson.com>"]
+description = "A collection of personal Rust libraries."
+repository = "https://github.com/arcuru/lib"
+keywords = ["rust", "library", "personal"]
+categories = ["development-tools", "libraries"]
+readme = "README.md"
+rust-version = "1.82"
+publish = false
