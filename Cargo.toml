@@ -1,14 +1,15 @@
 [workspace]
-members = [
-    "percentiletracker",
-]
+members = ["percentiletracker"]
 resolver = "2"
+
+[workspace.metadata.crane]
+name = "arcuru-lib"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-authors = ["Patrick Jackson <patrick@jackson.com>"]
+authors = ["Patrick Jackson <patrick@jackson.dev>"]
 description = "A collection of personal Rust libraries."
 repository = "https://github.com/arcuru/lib"
 keywords = ["rust", "library", "personal"]
