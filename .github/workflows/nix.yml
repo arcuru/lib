@@ -1,0 +1,66 @@
+name: Nix
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v12
+      - name: Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v7
+
+      - name: Format
+        run: nix build .#fmt
+
+      - name: Format TOML
+        run: nix build .#toml-fmt
+
+      - name: Audit
+        run: nix build .#audit
+
+      - name: Clippy
+        run: nix build .#clippy
+
+      - name: Build docs
+        run: nix build .#doc
+
+      - name: Test
+        run: nix build .#test
+
+        # Run any nix checks that aren't covered by the above
+        # This should include building the local libs themselves.
+      - name: Build All
+        run: nix flake check
+
+  # Run this separately since
+  #   1) it uses a separate set of deps, so no shared cache with the other build
+  #   2) failures here shouldn't block merging
+  coverage:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v12
+      - name: Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v7
+
+      - name: Build Coverage
+        # Build and ensure the output is linked in result/
+        run: nix build -L .#coverage
+
+      # Upload code coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./result/lcov.info

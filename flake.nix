@@ -65,10 +65,7 @@
       # so we can reuse all of that work (e.g. via cachix) when running in CI
       # It is *highly* recommended to use something like cargo-hakari to avoid
       # cache misses when building individual top-level-crates
-      cargoArtifacts = craneLib.buildDepsOnly (commonArgs
-        // {
-          pname = "arcuru-lib-deps";
-        });
+      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
       individualCrateArgs =
         commonArgs
@@ -114,45 +111,39 @@
         # Note that this is done as a separate derivation so that
         # we can block the CI if there are issues here, but not
         # prevent downstream consumers from building our crate by itself.
-        arcuru-lib-clippy = craneLib.cargoClippy (commonArgs
+        clippy = craneLib.cargoClippy (commonArgs
           // {
             inherit cargoArtifacts;
-            pname = "arcuru-lib-clippy";
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
 
-        arcuru-lib-doc = craneLib.cargoDoc (commonArgs
+        doc = craneLib.cargoDoc (commonArgs
           // {
             inherit cargoArtifacts;
-            pname = "arcuru-lib-doc";
           });
 
         # Check formatting
-        arcuru-lib-fmt = craneLib.cargoFmt {
+        fmt = craneLib.cargoFmt {
           inherit src;
-          pname = "arcuru-lib-fmt";
         };
 
-        arcuru-lib-toml-fmt = craneLib.taploFmt {
+        toml-fmt = craneLib.taploFmt {
           src = pkgs.lib.sources.sourceFilesBySuffices src [".toml"];
-          pname = "arcuru-lib-toml-fmt";
           # taplo arguments can be further customized below as needed
           # taploExtraArgs = "--config ./taplo.toml";
         };
 
         # Audit dependencies
-        arcuru-lib-audit = craneLib.cargoAudit {
+        audit = craneLib.cargoAudit {
           inherit src advisory-db;
-          pname = "arcuru-lib-audit";
         };
 
         # Run tests with cargo-nextest
         # Consider setting `doCheck = false` on other crate derivations
         # if you do not want the tests to run twice
-        arcuru-lib-nextest = craneLib.cargoNextest (commonArgs
+        test = craneLib.cargoNextest (commonArgs
           // {
             inherit cargoArtifacts;
-            pname = "arcuru-lib-nextest";
             partitions = 1;
             partitionType = "count";
             cargoNextestPartitionsExtraArgs = "--no-tests=pass";
@@ -162,12 +153,14 @@
       packages =
         {
           inherit percentiletracker;
+          inherit (self.checks.${system}) clippy doc fmt toml-fmt audit test;
         }
         // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
-          arcuru-lib-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs
+          # Build coverage
+          # This can be expensive to run, so it's here to be run manually
+          coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs
             // {
               inherit cargoArtifacts;
-              pname = "arcuru-lib-llvm-coverage";
             });
         };
 
@@ -180,6 +173,14 @@
       devShells.default = craneLib.devShell {
         # Inherit inputs from checks.
         checks = self.checks.${system};
+        packages = with pkgs; [
+          act # Run CI locally in containers
+          go-task # Run tasks
+
+          # Formatting
+          alejandra
+          nodePackages.prettier
+        ];
       };
     });
 }
