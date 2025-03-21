@@ -8,12 +8,22 @@ fn bench_tracker_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("tracker_throughput");
 
     // Test with different batch sizes
-    for batch_size in [100000, 1000000, 10000000].iter() {
+    for batch_size in [100_000, 1_000_000, 10_000_000, 100_000_000].iter() {
         // Test with different percentiles
         for percentile in [10, 50, 90].iter() {
             // Set throughput to report in bytes processed
             // Each i64 is 8 bytes
             group.throughput(Throughput::Bytes((*batch_size as u64) * 8));
+
+            // Configure sample count based on batch size
+            let sample_count = match batch_size {
+                100_000 => 50,
+                1_000_000 => 50,
+                10_000_000 => 20,
+                100_000_000 => 10,
+                _ => 100,
+            };
+            group.sample_size(sample_count);
 
             group.bench_with_input(
                 BenchmarkId::new(format!("size_{}", batch_size), percentile),
@@ -127,16 +137,21 @@ fn bench_realistic_usage(c: &mut Criterion) {
     // Total operations for each benchmark
     let total_ops = 1000000;
 
-    // Set throughput to report in bytes processed
-    // Each i64 is 8 bytes
-    group.throughput(Throughput::Bytes((total_ops as u64) * 8));
-
     // Define different usage patterns
     for &(pattern_name, insert_count, get_count) in &[
         ("insert_heavy", 10, 1), // 10 inserts per get
         ("balanced", 1, 1),      // Equal inserts and gets
         ("get_heavy", 1, 10),    // 1 insert per 10 gets
     ] {
+        // Calculate estimated number of inserts based on the pattern
+        let total_cycle_ops = insert_count + get_count;
+        let cycles = total_ops / total_cycle_ops;
+        let estimated_inserts = cycles * insert_count;
+
+        // Set throughput to report in bytes processed
+        // Each i64 is 8 bytes - only count inserts for throughput
+        group.throughput(Throughput::Bytes((estimated_inserts as u64) * 8));
+
         group.bench_function(pattern_name, |b| {
             // Generate values outside the benchmark loop
             let mut rng = ChaCha8Rng::seed_from_u64(42);
