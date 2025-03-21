@@ -39,7 +39,7 @@
 
       # Common arguments can be set here to avoid repeating them later
       commonArgs = {
-        inherit src;
+        inherit cargoArtifacts src;
         strictDeps = true;
 
         buildInputs =
@@ -70,7 +70,6 @@
       individualCrateArgs =
         commonArgs
         // {
-          inherit cargoArtifacts;
           inherit (craneLib.crateNameFromCargoToml {inherit src;}) version;
           # NB: we disable tests since we'll run them all via cargo-nextest
           doCheck = false;
@@ -113,19 +112,13 @@
         # prevent downstream consumers from building our crate by itself.
         clippy = craneLib.cargoClippy (commonArgs
           // {
-            inherit cargoArtifacts;
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
 
-        doc = craneLib.cargoDoc (commonArgs
-          // {
-            inherit cargoArtifacts;
-          });
+        doc = craneLib.cargoDoc commonArgs;
 
         # Check formatting
-        fmt = craneLib.cargoFmt {
-          inherit src;
-        };
+        fmt = craneLib.cargoFmt commonArgs;
 
         toml-fmt = craneLib.taploFmt {
           src = pkgs.lib.sources.sourceFilesBySuffices src [".toml"];
@@ -143,7 +136,6 @@
         # if you do not want the tests to run twice
         test = craneLib.cargoNextest (commonArgs
           // {
-            inherit cargoArtifacts;
             partitions = 1;
             partitionType = "count";
             cargoNextestPartitionsExtraArgs = "--no-tests=pass";
@@ -160,7 +152,8 @@
           # This can be expensive to run, so it's here to be run manually
           coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs
             // {
-              inherit cargoArtifacts;
+              # Use lcov output as thats far more widely supported
+              cargoTarpaulinExtraArgs = "--skip-clean --include-tests --output-dir $out --out lcov";
             });
         };
 

@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bencherdev/bencher@main
-      - run: bencher run "bencher mock"
+      - run: bencher run "cargo bench"

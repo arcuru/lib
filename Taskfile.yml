@@ -69,3 +69,13 @@ tasks:
   nix:fmt:
     desc: Run all formatters using treefmt
     cmd: nix fmt
+
+  bench:
+    desc: Run all benchmarks
+    cmd: cargo bench -- {{.CLI_ARGS}}
+  bench:main:
+    desc: Run benchmarks compared against main
+    cmd: cargo bench -- --baseline main {{.CLI_ARGS}}
+  bench:set-baseline:
+    desc: Set the baseline for benchmarks
+    cmd: cargo bench -- --save-baseline {{.CLI_ARGS}}

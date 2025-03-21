@@ -13,3 +13,7 @@ criterion = "0.5"
 [[bench]]
 name = "percentile_tracker_benchmarks"
 harness = false
+
+# Disable automatic benchmarks
+[lib]
+bench = false
