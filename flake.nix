@@ -166,6 +166,7 @@
       devShells.default = craneLib.devShell {
         # Inherit inputs from checks.
         checks = self.checks.${system};
+
         packages = with pkgs; [
           act # Run CI locally in containers
           go-task # Run tasks
@@ -173,6 +174,8 @@
           # Formatting
           alejandra
           nodePackages.prettier
+
+          cargo-tarpaulin
         ];
       };
     });
