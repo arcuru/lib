@@ -49,4 +49,4 @@ tracker.insert(99);
 let p90 = tracker.get_percentile();
 ```
 
-The implementation is generic over any type that implements `Clone + Ord + Debug`, making it versatile for different numeric data types.
+The implementation is generic over any type that implements `Clone + Ord`, making it usable for any sortable type.

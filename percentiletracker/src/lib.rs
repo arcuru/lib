@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::cmp::Ord;
-use std::fmt::Debug;
 
 // This was handtuned over a few timing runs. It's not perfect, but it's good enough.
 // Also confusingly, this number seems to not have much impact if it isn't pathological.
@@ -18,7 +17,7 @@ const MAX_BUCKET_SIZE: usize = 64;
 /// They also cache the minimum value for efficient bucket location.
 struct Bucket<T>
 where
-    T: Clone + Ord + Debug,
+    T: Clone + Ord,
 {
     /// The minimum value in this bucket, cached for efficient comparisons.
     min_value: T,
@@ -33,7 +32,7 @@ where
 
 impl<T> Bucket<T>
 where
-    T: Clone + Ord + Debug,
+    T: Clone + Ord,
 {
     /// Creates a new bucket containing a single value.
     ///
@@ -155,7 +154,7 @@ where
 /// When buckets grow too large, they are split to maintain performance characteristics.
 pub struct PercentileTracker<T>
 where
-    T: Clone + Ord + Debug,
+    T: Clone + Ord,
 {
     /// Collection of buckets that store the values in partitioned ranges.
     buckets: RefCell<Vec<Bucket<T>>>,
@@ -179,7 +178,7 @@ where
 
 impl<T> PercentileTracker<T>
 where
-    T: Clone + Ord + Debug,
+    T: Clone + Ord,
 {
     /// Creates a new, empty PercentileTracker.
     ///
@@ -430,6 +429,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fmt::Debug;
 
     /// Helper function to calculate the target percentile from a sorted vector.
     ///
